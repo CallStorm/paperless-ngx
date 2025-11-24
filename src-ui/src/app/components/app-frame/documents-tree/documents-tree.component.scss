@@ -1,0 +1,60 @@
+.documents-tree {
+  .documents-tree__root {
+    padding-right: 0.25rem;
+  }
+
+  .documents-tree__root-link {
+    text-decoration: none;
+  }
+
+  .documents-tree__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .documents-tree__icon-button {
+    color: inherit;
+    line-height: 1;
+  }
+
+  .documents-tree__state {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .documents-tree__list {
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .documents-tree__row {
+    padding: 0.15rem 0.25rem 0.15rem 0;
+  }
+
+  .documents-tree__toggle {
+    width: 1.5rem;
+    color: inherit;
+  }
+
+  .documents-tree__toggle-spacer {
+    display: inline-block;
+    width: 1.5rem;
+  }
+
+  .documents-tree__link {
+    text-decoration: none;
+    color: inherit;
+
+    &.active {
+      font-weight: 600;
+      color: var(--bs-primary);
+    }
+  }
+
+  .documents-tree__item .documents-tree__row.active > .documents-tree__link {
+    font-weight: 600;
+    color: var(--bs-primary);
+  }
+}
+

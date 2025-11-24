@@ -14,4 +14,6 @@ export interface Tag extends MatchingModel {
   // UI-only: computed depth and order for hierarchical dropdowns
   depth?: number
   orderIndex?: number
+
+  user_can_change?: boolean
 }

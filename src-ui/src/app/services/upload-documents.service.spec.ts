@@ -54,6 +54,20 @@ describe('UploadDocumentsService', () => {
     req[0].flush('123-456')
   })
 
+  it('includes tag metadata when provided', () => {
+    const file = new File(
+      [new Blob(['testing'], { type: 'application/pdf' })],
+      'file.pdf'
+    )
+    uploadDocumentsService.uploadFile(file, { tags: [1, 2] })
+    const [req] = httpTestingController.match(
+      `${environment.apiBaseUrl}documents/post_document/`
+    )
+    const body = req.request.body as FormData
+    expect(body.getAll('tags')).toEqual(['1', '2'])
+    req.flush('123')
+  })
+
   it('updates progress during upload and failure', () => {
     const file = new File(
       [new Blob(['testing'], { type: 'application/pdf' })],

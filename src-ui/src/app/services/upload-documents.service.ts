@@ -7,6 +7,10 @@ import {
   WebsocketStatusService,
 } from './websocket-status.service'
 
+export interface UploadFileOptions {
+  tags?: number[]
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -16,10 +20,13 @@ export class UploadDocumentsService {
 
   private uploadSubscriptions: Array<Subscription> = []
 
-  public uploadFile(file: File) {
+  public uploadFile(file: File, options: UploadFileOptions = {}) {
     let formData = new FormData()
     formData.append('document', file, file.name)
     formData.append('from_webui', 'true')
+    options.tags?.forEach((tagId) =>
+      formData.append('tags', tagId.toString())
+    )
     let status = this.websocketStatusService.newFileUpload(file.name)
 
     status.message = $localize`Connecting...`

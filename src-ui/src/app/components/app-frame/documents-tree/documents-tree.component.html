@@ -1,0 +1,113 @@
+<li class="nav-item app-link documents-tree">
+  <div class="documents-tree__root d-flex align-items-center justify-content-between">
+    <a class="nav-link flex-grow-1 d-flex align-items-center documents-tree__root-link"
+      routerLink="/documents"
+      [queryParams]="buildQueryParams()"
+      (click)="onRootNavigate()"
+      [class.active]="!activeTagId && isDocumentsRoute"
+      ngbPopover="Documents"
+      i18n-ngbPopover
+      [disablePopover]="!slimSidebarEnabled"
+      placement="end"
+      container="body"
+      triggers="mouseenter:mouseleave"
+      popoverClass="popover-slim">
+      <i-bs class="me-1" name="files"></i-bs>
+      <span>&nbsp;<ng-container i18n>Documents</ng-container></span>
+    </a>
+    <div class="documents-tree__actions" *ngIf="canCreateDirectories || canUploadDocuments">
+      <div ngbDropdown>
+        <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Add" i18n-aria-label>
+          <i-bs name="plus"></i-bs>
+        </button>
+        <div ngbDropdownMenu class="shadow">
+          <button ngbDropdownItem *ngIf="canCreateDirectories" (click)="openCreateDirectoryDialog()" i18n>Create directory</button>
+          <button ngbDropdownItem *ngIf="canUploadDocuments" (click)="queueUpload()" i18n>Upload document</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="documents-tree__state" *ngIf="loading">
+    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+    <span i18n>Loading directories...</span>
+  </div>
+
+  <div class="documents-tree__state text-danger small" *ngIf="error">
+    <span>{{error}}</span>
+    <button class="btn btn-link btn-sm p-0 ms-2" (click)="loadTree()" i18n>Retry</button>
+  </div>
+
+  <div class="documents-tree__state text-muted small" *ngIf="!loading && !error && nodes.length === 0">
+    <span i18n>No directories yet</span>
+  </div>
+
+  <ul class="documents-tree__list list-unstyled mb-0" *ngIf="nodes.length">
+    <ng-container *ngTemplateOutlet="treeNodes; context: { $implicit: nodes }"></ng-container>
+  </ul>
+
+  <input #uploadInput type="file" class="visually-hidden" multiple (change)="onFilesSelected($event)">
+</li>
+
+<ng-template #treeNodes let-items>
+  @for (node of items; track node.id) {
+    <li class="documents-tree__item">
+      <div class="documents-tree__row d-flex align-items-center"
+        [style.paddingLeft.px]="getIndent(node.depth)"
+        [class.active]="activeTagId === node.id">
+        @if (node.children?.length) {
+          <button class="btn btn-link btn-sm documents-tree__toggle" type="button" (click)="toggleNode(node)"
+            [attr.aria-label]="node.expanded ? collapseLabel : expandLabel">
+            <i-bs [name]="node.expanded ? 'chevron-down' : 'chevron-right'"></i-bs>
+          </button>
+        } @else {
+          <span class="documents-tree__toggle-spacer"></span>
+        }
+
+        <a class="nav-link documents-tree__link flex-grow-1 d-flex align-items-center"
+          routerLink="/documents"
+          [queryParams]="buildQueryParams(node.id)"
+          (click)="onNodeNavigate()"
+          [ngClass]="{ 'text-truncate': !slimSidebarEnabled }"
+          [class.active]="activeTagId === node.id"
+          [ngbPopover]="node.name"
+          [disablePopover]="!slimSidebarEnabled"
+          placement="end"
+          container="body"
+          triggers="mouseenter:mouseleave"
+          popoverClass="popover-slim">
+          <i-bs class="me-1" name="folder"></i-bs>
+          <span>&nbsp;{{node.name}}</span>
+        </a>
+
+        <div class="documents-tree__actions ms-1">
+          <div ngbDropdown *ngIf="canCreateDirectories || canUploadDocuments">
+            <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Add to directory" i18n-aria-label>
+              <i-bs name="plus"></i-bs>
+            </button>
+            <div ngbDropdownMenu class="shadow">
+              <button ngbDropdownItem *ngIf="canCreateDirectories" (click)="openCreateDirectoryDialog(node)" i18n>Create directory</button>
+              <button ngbDropdownItem *ngIf="canUploadDocuments" (click)="queueUpload(node.id)" i18n>Upload document</button>
+            </div>
+          </div>
+          <div ngbDropdown *ngIf="canRenameTag(node) || canDeleteTag(node)">
+            <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Directory options" i18n-aria-label>
+              <i-bs name="three-dots"></i-bs>
+            </button>
+            <div ngbDropdownMenu class="shadow">
+              <button ngbDropdownItem *ngIf="canRenameTag(node)" (click)="openRenameDialog(node)" i18n>Rename</button>
+              <button ngbDropdownItem class="text-danger" *ngIf="canDeleteTag(node)" (click)="deleteNode(node)" i18n>Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (node.children?.length && node.expanded) {
+        <ul class="documents-tree__list list-unstyled mb-0">
+          <ng-container *ngTemplateOutlet="treeNodes; context: { $implicit: node.children }"></ng-container>
+        </ul>
+      }
+    </li>
+  }
+</ng-template>
+
