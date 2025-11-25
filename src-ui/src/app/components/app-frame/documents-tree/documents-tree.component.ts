@@ -133,18 +133,19 @@ export class DocumentsTreeComponent implements OnInit, OnDestroy {
   }
 
   canRenameTag(node: DocumentTreeNode): boolean {
-    return (
-      !!node?.user_can_change &&
-      this.permissionsService.currentUserCan(
-        PermissionAction.Change,
-        PermissionType.Tag
-      )
+
+    const hasChangePermission = this.permissionsService.currentUserCan(
+      PermissionAction.Change,
+      PermissionType.Tag
     )
+    // Debug log to trace permission evaluation for rename action
+    // eslint-disable-next-line no-console
+ 
+    return  hasChangePermission
   }
 
   canDeleteTag(node: DocumentTreeNode): boolean {
     return (
-      !!node?.user_can_change &&
       this.permissionsService.currentUserCan(
         PermissionAction.Delete,
         PermissionType.Tag

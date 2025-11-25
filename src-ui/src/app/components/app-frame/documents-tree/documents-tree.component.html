@@ -82,7 +82,7 @@
 
         <div class="documents-tree__actions ms-1" *ngIf="selectedNodeId === node.id">
           <div ngbDropdown *ngIf="canCreateDirectories || canUploadDocuments">
-            <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Add to directory" i18n-aria-label>
+            <button class="btn btn-link p-0 documents-tree__dropdown-button" type="button" ngbDropdownToggle aria-label="Add to directory" i18n-aria-label>
               <i-bs name="plus"></i-bs>
             </button>
             <div ngbDropdownMenu class="shadow">
@@ -91,7 +91,7 @@
             </div>
           </div>
           <div ngbDropdown *ngIf="canRenameTag(node) || canDeleteTag(node)">
-            <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Directory options" i18n-aria-label>
+            <button class="btn btn-link p-0 d documents-tree__dropdown-button" type="button" ngbDropdownToggle aria-label="Directory options" i18n-aria-label>
               <i-bs name="three-dots"></i-bs>
             </button>
             <div ngbDropdownMenu class="shadow">

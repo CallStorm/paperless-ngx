@@ -18,6 +18,12 @@
     line-height: 1;
   }
 
+  .documents-tree__dropdown-button {
+    &::after {
+      display: none;
+    }
+  }
+
   .documents-tree__state {
     padding: 0.35rem 0.75rem;
     font-size: 0.85rem;
