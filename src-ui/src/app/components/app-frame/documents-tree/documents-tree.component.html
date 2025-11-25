@@ -56,9 +56,12 @@
         [style.paddingLeft.px]="getIndent(node.depth)"
         [class.active]="activeTagId === node.id">
         @if (node.children?.length) {
-          <button class="btn btn-link btn-sm documents-tree__toggle" type="button" (click)="toggleNode(node)"
+          <button class="btn btn-link btn-sm documents-tree__toggle"
+            [class.documents-tree__toggle--expanded]="node.expanded"
+            type="button"
+            (click)="toggleNode(node)"
             [attr.aria-label]="node.expanded ? collapseLabel : expandLabel">
-            <i-bs [name]="node.expanded ? 'chevron-down' : 'chevron-right'"></i-bs>
+            <span class="documents-tree__toggle-icon" aria-hidden="true"></span>
           </button>
         } @else {
           <span class="documents-tree__toggle-spacer"></span>
