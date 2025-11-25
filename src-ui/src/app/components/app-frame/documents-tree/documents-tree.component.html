@@ -15,7 +15,7 @@
       <i-bs class="me-1" name="files"></i-bs>
       <span>&nbsp;<ng-container i18n>Documents</ng-container></span>
     </a>
-    <div class="documents-tree__actions" *ngIf="canCreateDirectories || canUploadDocuments">
+    <div class="documents-tree__actions" *ngIf="(canCreateDirectories || canUploadDocuments) && selectedNodeId === null">
       <div ngbDropdown>
         <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Add" i18n-aria-label>
           <i-bs name="plus"></i-bs>
@@ -67,7 +67,7 @@
         <a class="nav-link documents-tree__link flex-grow-1 d-flex align-items-center"
           routerLink="/documents"
           [queryParams]="buildQueryParams(node.id)"
-          (click)="onNodeNavigate()"
+          (click)="onNodeNavigate(node.id)"
           [ngClass]="{ 'text-truncate': !slimSidebarEnabled }"
           [class.active]="activeTagId === node.id"
           [ngbPopover]="node.name"
@@ -80,7 +80,7 @@
           <span>&nbsp;{{node.name}}</span>
         </a>
 
-        <div class="documents-tree__actions ms-1">
+        <div class="documents-tree__actions ms-1" *ngIf="selectedNodeId === node.id">
           <div ngbDropdown *ngIf="canCreateDirectories || canUploadDocuments">
             <button class="btn btn-link p-0 documents-tree__icon-button" type="button" ngbDropdownToggle aria-label="Add to directory" i18n-aria-label>
               <i-bs name="plus"></i-bs>

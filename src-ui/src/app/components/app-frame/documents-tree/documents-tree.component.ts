@@ -64,6 +64,7 @@ export class DocumentsTreeComponent implements OnInit, OnDestroy {
   error: string
   activeTagId?: number
   isDocumentsRoute: boolean = false
+  selectedNodeId: number | null = null // null means root Documents is selected
   readonly expandLabel = $localize`Expand`
   readonly collapseLabel = $localize`Collapse`
 
@@ -165,10 +166,12 @@ export class DocumentsTreeComponent implements OnInit, OnDestroy {
   }
 
   onRootNavigate(): void {
+    this.selectedNodeId = null
     this.menuCloseRequested.emit()
   }
 
-  onNodeNavigate(): void {
+  onNodeNavigate(nodeId: number): void {
+    this.selectedNodeId = nodeId
     this.menuCloseRequested.emit()
   }
 
@@ -310,6 +313,12 @@ export class DocumentsTreeComponent implements OnInit, OnDestroy {
     const tagParam = parsed.queryParams['tags__id__all']
     const parsedId = tagParam != null ? Number(tagParam) : NaN
     this.activeTagId = Number.isFinite(parsedId) ? parsedId : undefined
+    // Sync selectedNodeId with activeTagId
+    if (this.activeTagId !== undefined) {
+      this.selectedNodeId = this.activeTagId
+    } else if (this.isDocumentsRoute) {
+      this.selectedNodeId = null
+    }
   }
 }
 
