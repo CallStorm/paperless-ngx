@@ -149,6 +149,9 @@
             <a [href]="getDownloadUrl()" class="btn btn-sm btn-outline-secondary" title="Download" i18n-title (click)="$event.stopPropagation()">
               <i-bs name="download"></i-bs>
             </a>
+            <a routerLink="/documents/{{document.id}}/chat" class="btn btn-sm btn-outline-secondary" title="Chat" i18n-title *pngxIfPermissions="{ action: PermissionAction.Change, type: PermissionType.Document }">
+              <i-bs name="chat-left-text"></i-bs>
+            </a>
           } @else {
             <button class="btn btn-sm btn-outline-secondary placeholder bg-secondary"></button>
             <button class="btn btn-sm btn-outline-secondary placeholder bg-secondary"></button>
