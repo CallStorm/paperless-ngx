@@ -1,6 +1,13 @@
-import { AsyncPipe, NgTemplateOutlet } from '@angular/common'
+import { AsyncPipe, NgClass, NgTemplateOutlet } from '@angular/common'
 import { HttpClient, HttpResponse } from '@angular/common/http'
-import { Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core'
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core'
 import {
   FormArray,
   FormControl,
@@ -79,6 +86,11 @@ import { StoragePathService } from 'src/app/services/rest/storage-path.service'
 import { UserService } from 'src/app/services/rest/user.service'
 import { SettingsService } from 'src/app/services/settings.service'
 import { ToastService } from 'src/app/services/toast.service'
+import {
+  DocumentChatMessagePayload,
+  DocumentChatRequest,
+  DocumentChatService,
+} from 'src/app/services/document-chat.service'
 import { getFilenameFromContentDisposition } from 'src/app/utils/http'
 import { ISODateAdapter } from 'src/app/utils/ngb-iso-date-adapter'
 import * as UTIF from 'utif'
@@ -119,6 +131,7 @@ enum DocumentAiDetailNavIDs {
   Notes = 5,
   Permissions = 6,
   History = 7,
+  DocRead = 8,
 }
 
 enum ContentRenderType {
@@ -140,6 +153,14 @@ export enum ZoomSetting {
   OneAndHalf = '1.5',
   Two = '2',
   Three = '3',
+}
+
+interface DocReadMessage {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  streaming?: boolean
+  error?: boolean
 }
 
 @Component({
@@ -169,6 +190,7 @@ export enum ZoomSetting {
     FormsModule,
     ReactiveFormsModule,
     NgTemplateOutlet,
+    NgClass,
     SafeUrlPipe,
     NgbNavModule,
     NgbDropdownModule,
@@ -201,9 +223,12 @@ export class DocumentAiDetailComponent
   private componentRouterService = inject(ComponentRouterService)
   private deviceDetectorService = inject(DeviceDetectorService)
   private savedViewService = inject(SavedViewService)
+  private documentChatService = inject(DocumentChatService)
 
   @ViewChild('inputTitle')
   titleInput: TextComponent
+  @ViewChild('docReadMessagesContainer')
+  docReadMessagesContainer: ElementRef<HTMLDivElement>
 
   expandOriginalMetadata = false
   expandArchivedMetadata = false
@@ -268,6 +293,16 @@ export class DocumentAiDetailComponent
   public readonly ContentRenderType = ContentRenderType
 
   public readonly DataType = DataType
+
+  private readonly docReadSystemPrompt: string = $localize`You are DocRead, an AI assistant that can only answer using the provided document content. If the information is missing, say you cannot find it. Keep answers concise and respond using the same language as the user whenever possible.`
+  private readonly docReadContextCharLimit = 20000
+  private docReadMessageCounter = 0
+
+  docReadMessages: DocReadMessage[] = []
+  docReadInput: string = ''
+  docReadStreaming = false
+  docReadError: string
+  private docReadAbortController: AbortController
 
   @ViewChild('nav') nav: NgbNav
   @ViewChild('pdfPreview') set pdfPreview(element) {
@@ -624,6 +659,7 @@ export class DocumentAiDetailComponent
   }
 
   ngOnDestroy(): void {
+    this.cancelDocReadStream()
     this.unsubscribeNotifier.next(this)
     this.unsubscribeNotifier.complete()
   }
@@ -641,7 +677,77 @@ export class DocumentAiDetailComponent
       ])
   }
 
+  onDocReadKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      this.sendDocReadMessage()
+    }
+  }
+
+  sendDocReadMessage(event?: Event) {
+    event?.preventDefault()
+    if (this.docReadStreaming || !this.documentId) return
+    const trimmedQuestion = this.docReadInput?.trim()
+    if (!trimmedQuestion) return
+
+    const payload = this.buildDocReadPayload(trimmedQuestion)
+    const userMessage = this.createDocReadMessage('user', trimmedQuestion)
+    this.docReadMessages.push(userMessage)
+    this.docReadInput = ''
+
+    const assistantMessage = this.createDocReadMessage('assistant', '')
+    assistantMessage.streaming = true
+    this.docReadMessages.push(assistantMessage)
+    this.docReadStreaming = true
+    this.docReadError = null
+    this.scrollDocReadToBottom()
+
+    this.docReadAbortController = this.documentChatService.streamDocRead(
+      this.documentId,
+      payload,
+      {
+        onChunk: (chunk) => {
+          assistantMessage.content += chunk
+          this.scrollDocReadToBottom()
+        },
+        onComplete: () => {
+          assistantMessage.streaming = false
+        },
+        onError: (error) => {
+          assistantMessage.streaming = false
+          assistantMessage.error = true
+          assistantMessage.content =
+            assistantMessage.content ||
+            (error?.message ??
+              $localize`Unable to retrieve a response from DocRead.`)
+          this.docReadError =
+            error?.message ??
+            $localize`Unable to retrieve a response from DocRead.`
+        },
+        onAbort: () => {
+          assistantMessage.streaming = false
+          assistantMessage.error = true
+          if (!assistantMessage.content) {
+            assistantMessage.content = $localize`Response cancelled.`
+          }
+        },
+        onFinally: () => {
+          this.docReadStreaming = false
+          this.docReadAbortController = null
+        },
+      }
+    )
+  }
+
+  cancelDocReadStream() {
+    if (this.docReadAbortController) {
+      this.docReadAbortController.abort()
+      this.docReadAbortController = null
+    }
+  }
+
   updateComponent(doc: Document) {
+    this.resetDocReadState()
     this.document = doc
     this.requiresPassword = false
     this.updateFormForCustomFields()
@@ -705,6 +811,71 @@ export class DocumentAiDetailComponent
     }
     this.title = this.documentTitlePipe.transform(doc.title)
     this.prepareForm(doc)
+  }
+
+  private buildDocReadPayload(question: string): DocumentChatRequest {
+    const history: DocumentChatMessagePayload[] = this.docReadMessages.map(
+      (message) => ({
+        role: message.role,
+        content: message.content,
+      })
+    )
+    const messages: DocumentChatMessagePayload[] = [
+      { role: 'system', content: this.docReadSystemPrompt },
+    ]
+    const context = this.getDocumentContextSnippet()
+    if (context) {
+      messages.push({
+        role: 'user',
+        content: `${$localize`Document content:`}\n"""\n${context}\n"""`,
+      })
+    }
+    messages.push(...history)
+    messages.push({
+      role: 'user',
+      content: `${question}\n\n${$localize`Only answer using the document content. If you cannot find the answer, explicitly state this.`}`,
+    })
+    return { messages }
+  }
+
+  private getDocumentContextSnippet(): string {
+    const formContent = this.documentForm?.get('content')?.value
+    const baseContent =
+      (typeof formContent === 'string' && formContent.length > 0
+        ? formContent
+        : this.document?.content) || ''
+    if (!baseContent) return ''
+    if (baseContent.length <= this.docReadContextCharLimit) {
+      return baseContent
+    }
+    return `${baseContent.slice(0, this.docReadContextCharLimit)}\n...`
+  }
+
+  private createDocReadMessage(
+    role: 'user' | 'assistant',
+    content: string
+  ): DocReadMessage {
+    this.docReadMessageCounter += 1
+    return {
+      id: this.docReadMessageCounter,
+      role,
+      content,
+    }
+  }
+
+  private scrollDocReadToBottom() {
+    setTimeout(() => {
+      if (!this.docReadMessagesContainer) return
+      const container = this.docReadMessagesContainer.nativeElement
+      container.scrollTop = container.scrollHeight
+    })
+  }
+
+  private resetDocReadState() {
+    this.cancelDocReadStream()
+    this.docReadMessages = []
+    this.docReadInput = ''
+    this.docReadError = null
   }
 
   get customFieldFormFields(): FormArray {

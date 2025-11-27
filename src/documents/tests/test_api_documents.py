@@ -47,6 +47,7 @@ from documents.models import WorkflowTrigger
 from documents.signals.handlers import run_workflows
 from documents.tests.utils import DirectoriesMixin
 from documents.tests.utils import DocumentConsumeDelayMixin
+from paperless.models import AIModel
 
 
 class TestDocumentApi(DirectoriesMixin, DocumentConsumeDelayMixin, APITestCase):
@@ -398,6 +399,100 @@ class TestDocumentApi(DirectoriesMixin, DocumentConsumeDelayMixin, APITestCase):
 
         response = self.client.get(f"/api/documents/{doc.pk}/thumb/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_doc_read_requires_default_model(self):
+        doc = Document.objects.create(
+            title="Doc",
+            checksum="123",
+            mime_type="application/pdf",
+            content="test content",
+        )
+
+        response = self.client.post(
+            f"/api/documents/{doc.pk}/doc_read/",
+            {"messages": [{"role": "user", "content": "Hi?"}]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+
+    @mock.patch("documents.views.httpx.Client")
+    def test_doc_read_streams_tokens(self, mock_client_cls):
+        doc = Document.objects.create(
+            title="Doc",
+            checksum="123",
+            mime_type="application/pdf",
+            content="doc content",
+        )
+        AIModel.objects.create(
+            name="default",
+            supplier=AIModel.SupplierChoices.OPENAI,
+            model_type="llm",
+            base_model="gpt-test",
+            api_domain="https://api.example.com/v1",
+            api_key="secret",
+            params=[],
+            is_default=True,
+        )
+
+        mock_client = mock_client_cls.return_value
+        mock_response = mock.MagicMock()
+        mock_response.iter_lines.return_value = iter(
+            [
+                'data: {"choices":[{"delta":{"content":"Hello"}}]}',
+                'data: {"choices":[{"delta":{"content":" world"}}]}',
+                "data: [DONE]",
+            ]
+        )
+        mock_response.raise_for_status.return_value = None
+        mock_client.post.return_value = mock_response
+
+        response = self.client.post(
+            f"/api/documents/{doc.pk}/doc_read/",
+            {"messages": [{"role": "user", "content": "Hi?"}]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.streaming)
+        self.assertEqual(b"".join(response.streaming_content), b"Hello world")
+        mock_client.post.assert_called_once_with(
+            "https://api.example.com/v1/chat/completions",
+            headers=mock.ANY,
+            json=mock.ANY,
+            stream=True,
+        )
+
+    def test_doc_read_requires_permissions(self):
+        owner = User.objects.create_user(username="owner")
+        other = User.objects.create_user(username="other")
+        doc = Document.objects.create(
+            title="Doc",
+            checksum="123",
+            mime_type="application/pdf",
+            content="doc content",
+            owner=owner,
+        )
+        AIModel.objects.create(
+            name="default",
+            supplier=AIModel.SupplierChoices.OPENAI,
+            model_type="llm",
+            base_model="gpt-test",
+            api_domain="https://api.example.com/v1",
+            api_key="secret",
+            params=[],
+            is_default=True,
+        )
+
+        self.client.force_authenticate(user=other)
+        response = self.client.post(
+            f"/api/documents/{doc.pk}/doc_read/",
+            {"messages": [{"role": "user", "content": "Hi?"}]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @override_settings(FILENAME_FORMAT="")
     def test_download_with_archive(self):

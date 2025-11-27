@@ -2696,3 +2696,18 @@ class StoragePathTestSerializer(SerializerWithPerms):
         label="Document",
         write_only=True,
     )
+
+
+class DocumentChatMessageSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(
+        choices=[
+            ("system", "system"),
+            ("user", "user"),
+            ("assistant", "assistant"),
+        ]
+    )
+    content = serializers.CharField()
+
+
+class DocumentDocReadSerializer(serializers.Serializer):
+    messages = DocumentChatMessageSerializer(many=True, min_length=1)

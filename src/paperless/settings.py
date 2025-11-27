@@ -596,7 +596,15 @@ CORS_ALLOWED_ORIGINS = __get_list(
     ["http://localhost:8000"],
 )
 
+CORS_ALLOW_CREDENTIALS = __get_boolean(
+    "PAPERLESS_CORS_ALLOW_CREDENTIALS",
+    "true" if DEBUG else "false",
+)
+
 if DEBUG:
+    # Allow CSRF checks from the angular development server
+    CSRF_TRUSTED_ORIGINS.append("http://localhost:4200")
+
     # Allow access from the angular development server during debugging
     CORS_ALLOWED_ORIGINS.append("http://localhost:4200")
 

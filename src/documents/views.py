@@ -1,4 +1,5 @@
 import itertools
+import json
 import logging
 import os
 import platform
@@ -10,6 +11,7 @@ from collections import deque
 from datetime import datetime
 from pathlib import Path
 from time import mktime
+from typing import Any
 from typing import Literal
 from unicodedata import normalize
 from urllib.parse import quote
@@ -45,6 +47,7 @@ from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -69,6 +72,7 @@ from packaging import version as packaging_version
 from redis import Redis
 from rest_framework import parsers
 from rest_framework import serializers
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError
@@ -158,6 +162,7 @@ from documents.serialisers import BulkEditObjectsSerializer
 from documents.serialisers import BulkEditSerializer
 from documents.serialisers import CorrespondentSerializer
 from documents.serialisers import CustomFieldSerializer
+from documents.serialisers import DocumentDocReadSerializer
 from documents.serialisers import DocumentListSerializer
 from documents.serialisers import DocumentSerializer
 from documents.serialisers import DocumentTypeSerializer
@@ -190,6 +195,7 @@ from paperless import version
 from paperless.celery import app as celery_app
 from paperless.config import GeneralConfig
 from paperless.db import GnuPG
+from paperless.models import AIModel
 from paperless.models import ApplicationConfiguration
 from paperless.serialisers import GroupSerializer
 from paperless.serialisers import UserSerializer
@@ -1087,6 +1093,142 @@ class DocumentViewSet(
                 "error": "error",
             },
         )
+
+    @action(methods=["post"], detail=True, filter_backends=[])
+    def doc_read(self, request, pk=None):
+        doc = get_object_or_404(Document.objects.select_related("owner"), pk=pk)
+        if request.user is not None and not has_perms_owner_aware(
+            request.user,
+            "view_document",
+            doc,
+        ):
+            return HttpResponseForbidden("Insufficient permissions")
+
+        serializer = DocumentDocReadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        ai_model = AIModel.objects.filter(is_default=True).first()
+        if ai_model is None:
+            return Response(
+                {"detail": "No default AI model configured."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payload = {
+            "model": ai_model.base_model,
+            "messages": serializer.validated_data["messages"],
+            "stream": True,
+        }
+        payload.update(self._prepare_model_params(ai_model))
+        headers = self._build_ai_headers(ai_model)
+        url = f"{ai_model.api_domain.rstrip('/')}/chat/completions"
+
+        client = httpx.Client(timeout=None)
+        try:
+            request = client.build_request(
+                "POST",
+                url,
+                headers=headers,
+                json=payload,
+            )
+            upstream = client.send(request, stream=True)
+            upstream.raise_for_status()
+        except httpx.HTTPError as exc:
+            client.close()
+            logger.error("DocRead request failed: %s", exc)
+            return Response(
+                {"detail": "Unable to contact the AI model."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except Exception as exc:  # pragma: no cover
+            client.close()
+            logger.exception("Unexpected DocRead error: %s", exc)
+            return Response(
+                {"detail": "Unable to contact the AI model."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        def event_stream():
+            try:
+                for chunk in self._yield_ai_stream(upstream):
+                    if chunk:
+                        yield chunk
+            finally:
+                upstream.close()
+                client.close()
+
+        response = StreamingHttpResponse(
+            event_stream(),
+            content_type="text/plain; charset=utf-8",
+        )
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
+
+    def _prepare_model_params(self, ai_model: AIModel) -> dict[str, Any]:
+        params = ai_model.params
+        if not params:
+            return {}
+        if isinstance(params, dict):
+            return params
+        parsed = {}
+        if isinstance(params, list):
+            for entry in params:
+                if not isinstance(entry, dict):
+                    continue
+                key = entry.get("key")
+                if not key:
+                    continue
+                value = entry.get("val")
+                entry_type = entry.get("type")
+                if entry_type == "number":
+                    try:
+                        value = float(value)
+                    except (TypeError, ValueError):
+                        continue
+                elif entry_type == "json" and isinstance(value, str):
+                    try:
+                        value = json.loads(value)
+                    except json.JSONDecodeError:
+                        continue
+                parsed[key] = value
+        return parsed
+
+    def _build_ai_headers(self, ai_model: AIModel) -> dict[str, str]:
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+        }
+        headers["Authorization"] = f"Bearer {ai_model.api_key}"
+        return headers
+
+    def _yield_ai_stream(self, upstream: httpx.Response):
+        for line in upstream.iter_lines():
+            if not line:
+                continue
+            data = line
+            if line.startswith("data:"):
+                data = line.split("data:", 1)[1].strip()
+            if data == "[DONE]":
+                break
+            if not data:
+                continue
+            try:
+                payload = json.loads(data)
+            except json.JSONDecodeError:
+                yield data
+                continue
+            choices = payload.get("choices") or []
+            if not choices:
+                continue
+            delta = choices[0].get("delta") or {}
+            content = delta.get("content")
+            if content:
+                yield content
+                continue
+            message = choices[0].get("message")
+            if message and message.get("content"):
+                yield message.get("content")
 
     @action(methods=["get"], detail=True, filter_backends=[])
     def share_links(self, request, pk=None):

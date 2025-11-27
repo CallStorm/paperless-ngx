@@ -55,6 +55,7 @@ import { ComponentRouterService } from 'src/app/services/component-router.servic
 import { DocumentListViewService } from 'src/app/services/document-list-view.service'
 import { OpenDocumentsService } from 'src/app/services/open-documents.service'
 import { PermissionsService } from 'src/app/services/permissions.service'
+import { DocumentChatService } from 'src/app/services/document-chat.service'
 import { CorrespondentService } from 'src/app/services/rest/correspondent.service'
 import { CustomFieldsService } from 'src/app/services/rest/custom-fields.service'
 import { DocumentTypeService } from 'src/app/services/rest/document-type.service'
@@ -124,6 +125,10 @@ const customFields = [
   },
 ]
 
+class DocumentChatServiceStub {
+  streamDocRead = jest.fn().mockReturnValue(new AbortController())
+}
+
 describe('DocumentAiDetailComponent', () => {
   let component: DocumentAiDetailComponent
   let fixture: ComponentFixture<DocumentAiDetailComponent>
@@ -153,6 +158,10 @@ describe('DocumentAiDetailComponent', () => {
       ],
       providers: [
         DocumentTitlePipe,
+        {
+          provide: DocumentChatService,
+          useClass: DocumentChatServiceStub,
+        },
         {
           provide: TagService,
           useValue: {

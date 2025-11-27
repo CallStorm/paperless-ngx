@@ -98,6 +98,102 @@
           </ng-template>
         </li>
 
+        <li [ngbNavItem]="DocumentAiDetailNavIDs.DocRead">
+          <a ngbNavLink i18n>DocRead</a>
+          <ng-template ngbNavContent>
+            <div class="docread-container">
+              <div class="docread-hint text-muted" i18n>
+                Ask contextual questions about this document. Answers are generated from the current content only.
+              </div>
+              <div
+                class="docread-messages"
+                #docReadMessagesContainer
+              >
+                @if (!docReadMessages.length) {
+                  <div class="docread-empty" i18n>
+                    Start the conversation by asking DocRead about this document.
+                  </div>
+                }
+                @for (message of docReadMessages; track message.id) {
+                  <div
+                    class="docread-message"
+                    [ngClass]="{
+                      'docread-message-user': message.role === 'user',
+                      'docread-message-assistant': message.role === 'assistant',
+                      'docread-message-error': message.error
+                    }"
+                  >
+                    <div class="docread-message__role">
+                      @if (message.role === 'user') {
+                        <span i18n>You</span>
+                      } @else {
+                        <span i18n>DocRead</span>
+                      }
+                    </div>
+                    <div class="docread-message__content">
+                      {{ message.content }}
+                    </div>
+                    @if (message.streaming) {
+                      <div class="docread-message__status">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <span class="ms-2 text-muted" i18n>Generating...</span>
+                      </div>
+                    }
+                    @if (message.error && !message.streaming) {
+                      <div class="docread-message__status text-danger" i18n>
+                        This reply may be incomplete.
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              @if (docReadError) {
+                <div class="alert alert-warning mt-2 py-2" role="alert">
+                  {{ docReadError }}
+                </div>
+              }
+              <div class="docread-input mt-3">
+                <label for="docReadQuestion" class="form-label" i18n>Ask DocRead</label>
+                <textarea
+                  id="docReadQuestion"
+                  name="docReadQuestion"
+                  class="form-control"
+                  rows="4"
+                  [(ngModel)]="docReadInput"
+                  [ngModelOptions]="{ standalone: true }"
+                  (keydown)="onDocReadKeyDown($event)"
+                  [disabled]="docReadStreaming"
+                  i18n-placeholder
+                  placeholder="Ask a question about this document..."
+                ></textarea>
+                <div class="docread-actions d-flex justify-content-end gap-2 mt-2">
+                  @if (docReadStreaming) {
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      (click)="cancelDocReadStream()"
+                    >
+                      <span i18n>Stop</span>
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="sendDocReadMessage()"
+                    [disabled]="docReadStreaming || !docReadInput?.trim()"
+                  >
+                    @if (!docReadStreaming) {
+                      <span i18n>Send</span>
+                    } @else {
+                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                    }
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
  
  
 
