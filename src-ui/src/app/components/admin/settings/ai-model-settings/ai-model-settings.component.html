@@ -1,0 +1,230 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0" i18n>Configured AI models</h5>
+  <button class="btn btn-sm btn-primary" type="button" (click)="onCreateClick()">
+    <ng-container i18n>Add model</ng-container>
+  </button>
+</div>
+
+<div *ngIf="loading" class="text-muted small" i18n>Loading models...</div>
+
+<div *ngIf="!loading && models?.length" class="row g-3">
+  <div class="col-sm-6 col-lg-4" *ngFor="let m of models">
+    <div class="card model-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h6 class="card-title mb-1">{{ m.name }}</h6>
+            <div class="text-muted small">
+              <span i18n>Supplier:</span> {{ m.supplier }}
+            </div>
+          </div>
+          <span *ngIf="m.is_default" class="badge bg-primary" i18n>Default</span>
+        </div>
+
+        <div class="mb-1">
+          <span class="text-muted small" i18n>Base model:</span>
+          <span class="small">{{ m.base_model }}</span>
+        </div>
+
+        <div class="model-card-actions text-end">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary me-1"
+            [disabled]="m.is_default"
+            (click)="onSetDefault(m)"
+          >
+            <ng-container i18n>Set default</ng-container>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary me-1"
+            (click)="onEditClick(m)"
+          >
+            <ng-container i18n>Edit</ng-container>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            (click)="onDelete(m)"
+          >
+            <ng-container i18n>Delete</ng-container>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!loading && !models?.length" class="text-muted small" i18n>
+  No AI models configured yet. Add a model to get started.
+</div>
+
+<ng-template #modelDialog let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <ng-container *ngIf="selectedModel; else createTitle" i18n>
+        Edit AI model
+      </ng-container>
+      <ng-template #createTitle>
+        <span i18n>Add AI model</span>
+      </ng-template>
+    </h5>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="modal.dismiss('cancel')"
+    ></button>
+  </div>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    class="modal-body pt-3"
+  >
+    <div class="mb-3">
+      <label class="form-label" for="aiName" i18n>Display name</label>
+      <input
+        id="aiName"
+        type="text"
+        class="form-control"
+        formControlName="name"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="aiSupplier" i18n>Supplier</label>
+      <select
+        id="aiSupplier"
+        class="form-select"
+        formControlName="supplier"
+      >
+        <option *ngFor="let s of supplierList" [value]="s.code">
+          {{ s.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="aiModelType" i18n>Model type</label>
+      <input
+        id="aiModelType"
+        type="text"
+        class="form-control"
+        formControlName="model_type"
+        disabled
+        value="大语言模型"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="aiBaseModel" i18n>Base model</label>
+      <select
+        id="aiBaseModel"
+        class="form-select"
+        formControlName="base_model"
+      >
+        <option *ngFor="let o of modelOptions" [ngValue]="o.name">
+          {{ o.name }}
+        </option>
+      </select>
+      <small class="form-text text-muted" i18n>
+        Base model options depend on the selected supplier.
+      </small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="aiApiDomain" i18n>API domain</label>
+      <input
+        id="aiApiDomain"
+        type="text"
+        class="form-control"
+        formControlName="api_domain"
+      />
+      <small class="form-text text-muted" i18n>
+        Example: https://api.deepseek.com or
+        https://ark.cn-beijing.volces.com/api/v3
+      </small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="aiApiKey" i18n>API key</label>
+      <input
+        id="aiApiKey"
+        type="password"
+        class="form-control"
+        formControlName="api_key"
+      />
+    </div>
+
+    <div class="form-check mb-3">
+      <input
+        id="aiDefault"
+        type="checkbox"
+        class="form-check-input"
+        formControlName="is_default"
+      />
+      <label class="form-check-label" for="aiDefault" i18n
+        >Set as default model</label
+      >
+    </div>
+
+    <h6 class="mt-3" i18n>Advanced parameters</h6>
+    <div class="table-responsive mb-2">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th i18n>Key</th>
+            <th i18n>Display name</th>
+            <th i18n>Value</th>
+            <th class="text-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="onAddParamRow()"
+              >
+                <ng-container i18n>Add</ng-container>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody formArrayName="params">
+          <tr *ngFor="let p of paramsArray.controls; let i = index" [formGroupName]="i">
+            <td>
+              <input type="text" class="form-control form-control-sm" formControlName="key" />
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" formControlName="label" />
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" formControlName="val" />
+            </td>
+            <td class="text-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger"
+                (click)="onRemoveParamRow(i)"
+              >
+                <ng-container i18n>Remove</ng-container>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-footer px-0">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="modal.dismiss('cancel')"
+      >
+        <ng-container i18n>Cancel</ng-container>
+      </button>
+      <button type="submit" class="btn btn-primary">
+        <ng-container i18n>Save model</ng-container>
+      </button>
+    </div>
+  </form>
+</ng-template>
+

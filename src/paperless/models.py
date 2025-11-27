@@ -270,3 +270,84 @@ class ApplicationConfiguration(AbstractSingletonModel):
 
     def __str__(self) -> str:  # pragma: no cover
         return "ApplicationConfiguration"
+
+
+class AIModel(models.Model):
+    class SupplierChoices(models.TextChoices):
+        ALIBABA_CLOUD_BAILIAN = ("alibaba_cloud_bailian", _("Alibaba Cloud Bailian"))
+        DEEPSEEK = ("deepseek", _("DeepSeek"))
+        OPENAI = ("openai", _("OpenAI"))
+        KIMI = ("kimi", _("Kimi"))
+        VOLCANO_ENGINE = ("volcano_engine", _("Volcano Engine"))
+        GENERIC_OPENAI = ("generic_openai", _("Generic OpenAI"))
+
+    name = models.CharField(
+        verbose_name=_("display name"),
+        max_length=128,
+        unique=True,
+    )
+
+    supplier = models.CharField(
+        verbose_name=_("supplier"),
+        max_length=64,
+        choices=SupplierChoices.choices,
+    )
+
+    model_type = models.CharField(
+        verbose_name=_("model type"),
+        max_length=64,
+        default="llm",
+    )
+
+    base_model = models.CharField(
+        verbose_name=_("base model"),
+        max_length=128,
+    )
+
+    api_domain = models.CharField(
+        verbose_name=_("API domain"),
+        max_length=256,
+    )
+
+    api_key = models.TextField(
+        verbose_name=_("API key"),
+    )
+
+    params = models.JSONField(
+        verbose_name=_("advanced parameters"),
+        null=True,
+        blank=True,
+    )
+
+    is_default = models.BooleanField(
+        verbose_name=_("default model"),
+        default=False,
+    )
+
+    created_at = models.DateTimeField(
+        verbose_name=_("created at"),
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        verbose_name=_("updated at"),
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = _("AI model")
+        verbose_name_plural = _("AI models")
+
+    def save(self, *args, **kwargs):
+        # Ensure there is always exactly one default model
+        if self.is_default:
+            AIModel.objects.exclude(pk=self.pk).update(is_default=False)
+        elif not AIModel.objects.exclude(pk=self.pk).filter(is_default=True).exists():
+            # If no other default exists, make this one default (e.g. first model)
+            self.is_default = True
+
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:  # pragma: no cover
+        return self.name
+

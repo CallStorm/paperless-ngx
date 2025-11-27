@@ -13,6 +13,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 
+from paperless.models import AIModel
 from paperless.models import ApplicationConfiguration
 from paperless.validators import reject_dangerous_svg
 from paperless_mail.serialisers import ObfuscatedPasswordField
@@ -229,3 +230,12 @@ class ApplicationConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationConfiguration
         fields = "__all__"
+
+
+class AIModelSerializer(serializers.ModelSerializer):
+    api_key = ObfuscatedPasswordField(required=False)
+
+    class Meta:
+        model = AIModel
+        fields = "__all__"
+

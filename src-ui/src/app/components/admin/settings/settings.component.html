@@ -354,6 +354,14 @@
 
       </ng-template>
     </li>
+    @if (permissionsService.isAdmin()) {
+      <li [ngbNavItem]="SettingsNavIDs.AIModels">
+        <a ngbNavLink i18n>AI Models</a>
+        <ng-template ngbNavContent>
+          <pngx-ai-model-settings></pngx-ai-model-settings>
+        </ng-template>
+      </li>
+    }
   </ul>
 
   <div [ngbNavOutlet]="nav" class="border-start border-end border-bottom p-3 mb-3 shadow-sm"></div>

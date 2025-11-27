@@ -37,7 +37,9 @@ from documents.index import DelayedQuery
 from documents.permissions import PaperlessObjectPermissions
 from paperless.filters import GroupFilterSet
 from paperless.filters import UserFilterSet
+from paperless.models import AIModel
 from paperless.models import ApplicationConfiguration
+from paperless.serialisers import AIModelSerializer
 from paperless.serialisers import ApplicationConfigurationSerializer
 from paperless.serialisers import GroupSerializer
 from paperless.serialisers import PaperlessAuthTokenSerializer
@@ -357,6 +359,21 @@ class ApplicationConfigurationViewSet(ModelViewSet):
     @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         return Response(status=405)  # Not Allowed
+
+
+@extend_schema_view(
+    list=extend_schema(
+        description="List configured AI models used by the application.",
+    ),
+)
+class AIModelViewSet(ModelViewSet):
+    model = AIModel
+
+    queryset = AIModel.objects.all().order_by("id")
+
+    serializer_class = AIModelSerializer
+    permission_classes = (IsAuthenticated, DjangoModelPermissions)
+
 
 
 @extend_schema_view(
