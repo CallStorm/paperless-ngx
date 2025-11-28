@@ -11439,6 +11439,272 @@
         </context-group>
         <target state="translated">已完成。</target>
       </trans-unit>
+      <trans-unit id="1338108749521487908" datatype="html">
+        <source> Ask contextual questions about this document. Answers are generated from the current content only. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/document-ai-detail/document-ai-detail.component.html</context>
+          <context context-type="linenumber">105,107</context>
+        </context-group>
+        <target state="translated">请针对此文档提出相关问题。答案仅依据当前文档内容生成。</target>
+      </trans-unit>
+      <trans-unit id="8898571812998469698" datatype="html">
+        <source>Ask DocRead</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/document-ai-detail/document-ai-detail.component.html</context>
+          <context context-type="linenumber">156</context>
+        </context-group>
+        <target state="translated">智能问答</target>
+      </trans-unit>
+      <trans-unit id="3603760395919181079" datatype="html">
+        <source> Start the conversation by asking DocRead about this document. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/document-ai-detail/document-ai-detail.component.html</context>
+          <context context-type="linenumber">113,115</context>
+        </context-group>
+        <target state="translated">请通提问询问有关此文档的问题来开始对话。</target>
+      </trans-unit>
+      <trans-unit id="3167745892412525370" datatype="html">
+        <source>Ask a question about this document...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/document-ai-detail/document-ai-detail.component.html</context>
+          <context context-type="linenumber">167</context>
+        </context-group>
+        <target state="translated">提出一个关于此文档的问题</target>
+      </trans-unit>
+      <trans-unit id="6352096442118649368" datatype="html">
+        <source>DocRead</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/document-ai-detail/document-ai-detail.component.html</context>
+          <context context-type="linenumber">102</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/document-ai-detail/document-ai-detail.component.html</context>
+          <context context-type="linenumber">130</context>
+        </context-group>
+         <target state="translated">文档对话</target>
+      </trans-unit>
+      <trans-unit id="4706399306406856312" datatype="html">
+        <source>AI Models</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/settings.component.html</context>
+          <context context-type="linenumber">359</context>
+        </context-group>
+         <target state="translated">大语言模型</target>
+      </trans-unit>
+      <trans-unit id="4868821873858218429" datatype="html">
+        <source>Configured AI models</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+         <target state="translated">可用大语言模型列表</target>
+      </trans-unit>
+      <trans-unit id="6100518552999600869" datatype="html">
+        <source>Add model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+         <target state="translated">新增模型</target>
+      </trans-unit>
+      <trans-unit id="913816160544004349" datatype="html">
+        <source>Supplier:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+        <target state="translated">供应商:</target>
+      </trans-unit>
+      <trans-unit id="6069401308178892140" datatype="html">
+        <source>Base model:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+        <target state="translated">模型名称:</target>
+      </trans-unit>
+   <trans-unit id="8150000398135028461" datatype="html">
+        <source>Add AI model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+		 <target state="translated">新增模型</target>
+      </trans-unit>
+      <trans-unit id="2409672154570643758" datatype="html">
+        <source>Display name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">86</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">178</context>
+        </context-group>
+		 <target state="translated">显示名称</target>
+      </trans-unit>
+      <trans-unit id="4348920359154187664" datatype="html">
+        <source>Supplier</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">96</context>
+        </context-group>
+		 <target state="translated">供应商</target>
+      </trans-unit>
+      <trans-unit id="726078870898404128" datatype="html">
+        <source>Model type</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+		 <target state="translated">模型类型</target>
+      </trans-unit>
+      <trans-unit id="2870868153997806915" datatype="html">
+        <source>Base model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+		 <target state="translated">基础模型</target>
+      </trans-unit>
+      <trans-unit id="4635010281106756083" datatype="html">
+        <source> Base model options depend on the selected supplier. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">131,133</context>
+        </context-group>
+		 <target state="translated">基础模型依赖于选择的供应商</target>
+      </trans-unit>
+      <trans-unit id="3644130271710397342" datatype="html">
+        <source>API domain</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">137</context>
+        </context-group>
+		 <target state="translated">API 域名</target>
+      </trans-unit>
+      <trans-unit id="8562692615922669381" datatype="html">
+        <source> Example: https://api.deepseek.com or https://ark.cn-beijing.volces.com/api/v3 </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">144,147</context>
+        </context-group>
+		 <target state="translated">例如: https://api.deepseek.com or https://ark.cn-beijing.volces.com/api/v3</target>
+      </trans-unit>
+      <trans-unit id="4671562292257026998" datatype="html">
+        <source>API key</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">151</context>
+        </context-group>
+		 <target state="translated">API Key</target>
+      </trans-unit>
+      <trans-unit id="5175217289985611816" datatype="html">
+        <source>Set as default model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">168</context>
+        </context-group>
+		 <target state="translated">设为默认模型</target>
+      </trans-unit>
+      <trans-unit id="3388823541835416918" datatype="html">
+        <source>Advanced parameters</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">172</context>
+        </context-group>
+		 <target state="translated">高级设置</target>
+      </trans-unit>
+      <trans-unit id="2176659033176029418" datatype="html">
+        <source>Key</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">177</context>
+        </context-group>
+		 <target state="translated">参数</target>
+      </trans-unit>
+      <trans-unit id="6555318547274416232" datatype="html">
+        <source>Value</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+		 <target state="translated">参数值</target>
+      </trans-unit>
+
+	<trans-unit id="2068935723748311313" datatype="html">
+        <source>Save model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.html</context>
+          <context context-type="linenumber">225</context>
+        </context-group>
+		 <target state="translated">保存模型</target>
+      </trans-unit>
+      <trans-unit id="4783570898066468795" datatype="html">
+        <source>Error loading AI models</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">107</context>
+        </context-group>
+		 <target state="translated">模型加载错误</target>
+      </trans-unit>
+      <trans-unit id="3685864152521347735" datatype="html">
+        <source>Default AI model was updated successfully.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">235</context>
+        </context-group>
+		 <target state="translated">默认AI模型已更新成功</target>
+      </trans-unit>
+      <trans-unit id="840959872857492202" datatype="html">
+        <source>Error updating default AI model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">241</context>
+        </context-group>
+		 <target state="translated">更新默认AI模型时出错</target>
+      </trans-unit>
+      <trans-unit id="6942864054534920082" datatype="html">
+        <source>Are you sure you want to delete this model?</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">249</context>
+        </context-group>
+		 <target state="translated">你确定要删除这个模型吗？</target>
+      </trans-unit>
+      <trans-unit id="5390102486112619692" datatype="html">
+        <source>AI model was deleted successfully.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">255</context>
+        </context-group>
+		 <target state="translated">AI模型已成功删除。</target>
+      </trans-unit>
+      <trans-unit id="3972556563808885136" datatype="html">
+        <source>Error deleting AI model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">263</context>
+        </context-group>
+		 <target state="translated">删除AI模型时出错</target>
+      </trans-unit>
+      <trans-unit id="2623545811478292622" datatype="html">
+        <source>AI model was saved successfully.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">292</context>
+        </context-group>
+		 <target state="translated">AI模型保存成功。</target>
+      </trans-unit>
+      <trans-unit id="9129644093077362397" datatype="html">
+        <source>Error saving AI model</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/components/admin/settings/ai-model-settings/ai-model-settings.component.ts</context>
+          <context context-type="linenumber">301</context>
+        </context-group>
+		 <target state="translated">保存AI模型时出错</target>
+      </trans-unit>
+	  
     </body>
   </file>
 </xliff>
