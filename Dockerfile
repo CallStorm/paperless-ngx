@@ -81,7 +81,10 @@ RUN set -eux \
       && rm -rf /var/lib/apt/lists/*
 
 # Copy our service defs and filesystem
-COPY ./docker/rootfs /
+# COPY ./docker/rootfs /
+# 拆分一下， 会影响到/etc权限，导致apt update 执行失败。  Temporary failure resolving 'deb.debian.org'
+COPY ./docker/rootfs/etc/ /etc/
+COPY ./docker/rootfs/usr/local/bin/*   /usr/local/bin/
 
 # Stage: main-app
 # Purpose: The final image
