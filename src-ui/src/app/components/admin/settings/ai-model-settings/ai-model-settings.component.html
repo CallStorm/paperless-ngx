@@ -5,10 +5,36 @@
   </button>
 </div>
 
+<!-- 模型类型过滤标签 -->
+<div *ngIf="!loading && models?.length" class="mb-3">
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    <span class="text-muted small me-1" i18n>Filter by type:</span>
+    <button
+      type="button"
+      class="btn btn-sm"
+      [class.btn-primary]="selectedModelTypeFilter === 'ALL'"
+      [class.btn-outline-secondary]="selectedModelTypeFilter !== 'ALL'"
+      (click)="onModelTypeFilterChange('ALL')"
+    >
+      <ng-container i18n>ALL</ng-container>
+    </button>
+    <button
+      *ngFor="let modelType of availableModelTypes"
+      type="button"
+      class="btn btn-sm"
+      [class.btn-primary]="selectedModelTypeFilter === modelType"
+      [class.btn-outline-secondary]="selectedModelTypeFilter !== modelType"
+      (click)="onModelTypeFilterChange(modelType)"
+    >
+      {{ getModelTypeLabel(modelType) }}
+    </button>
+  </div>
+</div>
+
 <div *ngIf="loading" class="text-muted small" i18n>Loading models...</div>
 
-<div *ngIf="!loading && models?.length" class="row g-3">
-  <div class="col-sm-6 col-lg-4" *ngFor="let m of models">
+<div *ngIf="!loading && filteredModels?.length" class="row g-3">
+  <div class="col-sm-6 col-lg-4" *ngFor="let m of filteredModels">
     <div class="card model-card h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -18,7 +44,7 @@
               <span i18n>Supplier:</span> {{ m.supplier }}
             </div>
           </div>
-          <span *ngIf="m.is_default" class="badge bg-primary" i18n>Default</span>
+          <span *ngIf="isDefaultForType(m)" class="badge bg-primary" i18n>Default</span>
         </div>
 
         <div class="mb-1">
@@ -35,7 +61,7 @@
           <button
             type="button"
             class="btn btn-sm btn-outline-primary me-1"
-            [disabled]="m.is_default"
+            [disabled]="isDefaultForType(m)"
             (click)="onSetDefault(m)"
           >
             <ng-container i18n>Set default</ng-container>
@@ -60,6 +86,9 @@
   </div>
 </div>
 
+<div *ngIf="!loading && !filteredModels?.length && models?.length" class="text-muted small" i18n>
+  No AI models match the selected filter. Try selecting a different type or add a new model.
+</div>
 <div *ngIf="!loading && !models?.length" class="text-muted small" i18n>
   No AI models configured yet. Add a model to get started.
 </div>

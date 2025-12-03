@@ -43,9 +43,13 @@ export class AiModelSettingsComponent implements OnInit {
   private activeModal?: NgbModalRef
 
   models: AiModel[] = []
+  filteredModels: AiModel[] = []
   loading = false
 
   supplierList = supplierList
+
+  /** 当前选中的模型类型过滤器 */
+  selectedModelTypeFilter: string = 'ALL'
 
   /** 可选的模型类型 */
   readonly modelTypeOptions: { value: string; label: string }[] = [
@@ -53,6 +57,17 @@ export class AiModelSettingsComponent implements OnInit {
     { value: 'vlm', label: $localize`Vision-language model` },
     { value: 'embedding', label: $localize`Embedding model` },
   ]
+
+  /** 获取所有唯一的模型类型列表（用于过滤标签） */
+  get availableModelTypes(): string[] {
+    const types = new Set<string>()
+    this.models.forEach((model) => {
+      if (model.model_type) {
+        types.add(model.model_type)
+      }
+    })
+    return Array.from(types).sort()
+  }
 
   /** 当前供应商下可选的基础模型列表 */
   modelOptions: ModelOption[] = []
@@ -107,6 +122,7 @@ export class AiModelSettingsComponent implements OnInit {
         } else {
           this.models = []
         }
+        this.applyFilter()
         this.loading = false
       },
       error: (err) => {
@@ -114,6 +130,29 @@ export class AiModelSettingsComponent implements OnInit {
         this.toastService.showError($localize`Error loading AI models`, err)
       },
     })
+  }
+
+  /** 应用模型类型过滤器 */
+  applyFilter(): void {
+    if (this.selectedModelTypeFilter === 'ALL') {
+      this.filteredModels = this.models
+    } else {
+      this.filteredModels = this.models.filter(
+        (model) => model.model_type === this.selectedModelTypeFilter
+      )
+    }
+  }
+
+  /** 切换模型类型过滤器 */
+  onModelTypeFilterChange(filterType: string): void {
+    this.selectedModelTypeFilter = filterType
+    this.applyFilter()
+  }
+
+  /** 获取模型类型的显示标签 */
+  getModelTypeLabel(modelType: string): string {
+    const option = this.modelTypeOptions.find((opt) => opt.value === modelType)
+    return option ? option.label : modelType
   }
 
   private resetParams(params?: ModelArg[]): void {
@@ -252,6 +291,18 @@ export class AiModelSettingsComponent implements OnInit {
     })
   }
 
+  /** 检查模型是否是当前类型的默认模型 */
+  isDefaultForType(model: AiModel): boolean {
+    if (!model.is_default) {
+      return false
+    }
+    // 检查是否是该类型中唯一的默认模型
+    const sameTypeModels = this.models.filter(
+      (m) => m.model_type === model.model_type && m.is_default
+    )
+    return sameTypeModels.length === 1 && sameTypeModels[0].id === model.id
+  }
+
   onDelete(model: AiModel): void {
     if (!confirm($localize`Are you sure you want to delete this model?`)) {
       return
@@ -302,6 +353,10 @@ export class AiModelSettingsComponent implements OnInit {
         if (this.activeModal) {
           this.activeModal.close()
           this.activeModal = null
+        }
+        // 如果创建了新模型，自动切换到对应的类型过滤器
+        if (!payload.id && payload.model_type) {
+          this.onModelTypeFilterChange(payload.model_type)
         }
       },
       error: (err) => {

@@ -339,12 +339,18 @@ class AIModel(models.Model):
         verbose_name_plural = _("AI models")
 
     def save(self, *args, **kwargs):
-        # Ensure there is always exactly one default model
+        # Ensure there is always exactly one default model per model_type
         if self.is_default:
-            AIModel.objects.exclude(pk=self.pk).update(is_default=False)
-        elif not AIModel.objects.exclude(pk=self.pk).filter(is_default=True).exists():
-            # If no other default exists, make this one default (e.g. first model)
-            self.is_default = True
+            # Clear default flag for other models of the same type
+            AIModel.objects.filter(
+                model_type=self.model_type
+            ).exclude(pk=self.pk).update(is_default=False)
+        else:
+            # If no other default exists for this model_type, make this one default (e.g. first model)
+            if not AIModel.objects.filter(
+                model_type=self.model_type
+            ).exclude(pk=self.pk).filter(is_default=True).exists():
+                self.is_default = True
 
         super().save(*args, **kwargs)
 
