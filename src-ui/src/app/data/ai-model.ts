@@ -187,6 +187,7 @@ export const supplierList: SupplierConfig[] = [
           { name: 'kimi-k2-250711' },
           { name: 'deepseek-v3-250324' },
           { name: 'deepseek-r1' },
+          { name: 'doubao-1-5-vision-pro-32k-250115' },
         ],
       },
     },

@@ -47,6 +47,13 @@ export class AiModelSettingsComponent implements OnInit {
 
   supplierList = supplierList
 
+  /** 可选的模型类型 */
+  readonly modelTypeOptions: { value: string; label: string }[] = [
+    { value: 'llm', label: $localize`Large language model` },
+    { value: 'vlm', label: $localize`Vision-language model` },
+    { value: 'embedding', label: $localize`Embedding model` },
+  ]
+
   /** 当前供应商下可选的基础模型列表 */
   modelOptions: ModelOption[] = []
 
@@ -56,7 +63,7 @@ export class AiModelSettingsComponent implements OnInit {
     id: new FormControl<number | null>(null),
     name: new FormControl<string>('', [Validators.required]),
     supplier: new FormControl<string>('deepseek', [Validators.required]),
-    model_type: new FormControl<string>({ value: 'llm', disabled: true }),
+    model_type: new FormControl<string>('llm', [Validators.required]),
     base_model: new FormControl<string>('', [Validators.required]),
     api_domain: new FormControl<string>('', [Validators.required]),
     api_key: new FormControl<string>('', [Validators.required]),
@@ -192,7 +199,7 @@ export class AiModelSettingsComponent implements OnInit {
       id: null,
       name: '',
       supplier: 'deepseek',
-      model_type: { value: 'llm', disabled: true },
+      model_type: 'llm',
       base_model: '',
       api_domain: '',
       api_key: '',
@@ -213,7 +220,7 @@ export class AiModelSettingsComponent implements OnInit {
       id: model.id,
       name: model.name,
       supplier: model.supplier,
-      model_type: { value: model.model_type || 'llm', disabled: true },
+      model_type: model.model_type || 'llm',
       base_model: model.base_model,
       api_domain: model.api_domain,
       api_key: '',
@@ -275,7 +282,7 @@ export class AiModelSettingsComponent implements OnInit {
       id: raw.id,
       name: raw.name,
       supplier: raw.supplier,
-      model_type: 'llm',
+      model_type: raw.model_type,
       base_model: raw.base_model,
       api_domain: raw.api_domain,
       api_key: raw.api_key,

@@ -22,6 +22,11 @@
         </div>
 
         <div class="mb-1">
+          <span class="text-muted small" i18n>Model type:</span>
+          <span class="small"> {{ m.model_type }}</span>
+        </div>
+
+        <div class="mb-1">
           <span class="text-muted small" i18n>Base model:</span>
           <span class="small">{{ m.base_model }}</span>
         </div>
@@ -107,14 +112,18 @@
 
     <div class="mb-3">
       <label class="form-label" for="aiModelType" i18n>Model type</label>
-      <input
+      <select
         id="aiModelType"
-        type="text"
-        class="form-control"
+        class="form-select"
         formControlName="model_type"
-        disabled
-        value="大语言模型"
-      />
+      >
+        <option
+          *ngFor="let t of modelTypeOptions"
+          [ngValue]="t.value"
+        >
+          {{ t.label }}
+        </option>
+      </select>
     </div>
 
     <div class="mb-3">
