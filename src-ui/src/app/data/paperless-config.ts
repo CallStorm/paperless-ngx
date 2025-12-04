@@ -80,6 +80,13 @@ export const PaperlessConfigOptions: ConfigOption[] = [
     category: ConfigCategory.OCR,
   },
   {
+    key: 'vlm_analysis_enabled',
+    title: $localize`VLM Image Understanding`,
+    type: ConfigOptionType.Boolean,
+    config_key: 'PAPERLESS_OCR_VLM_ANALYSIS_ENABLED',
+    category: ConfigCategory.OCR,
+  },
+  {
     key: 'language',
     title: $localize`Language`,
     type: ConfigOptionType.String,
@@ -274,6 +281,7 @@ export interface PaperlessConfig extends ObjectWithId {
   max_image_pixels: number
   color_conversion_strategy: ColorConvertConfig
   user_args: object
+  vlm_analysis_enabled: boolean
   app_logo: string
   app_title: string
   barcodes_enabled: boolean

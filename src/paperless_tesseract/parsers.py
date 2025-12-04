@@ -1,3 +1,4 @@
+import base64
 import os
 import re
 import tempfile
@@ -13,6 +14,7 @@ from documents.parsers import make_thumbnail_from_pdf
 from documents.utils import maybe_override_pixel_limit
 from documents.utils import run_subprocess
 from paperless.config import OcrConfig
+from paperless.models import AIModel
 from paperless.models import ArchiveFileChoices
 from paperless.models import CleanChoices
 from paperless.models import ModeChoices
@@ -386,7 +388,133 @@ class RasterisedDocumentParser(DocumentParser):
             if self.settings.skip_archive_file != ArchiveFileChoices.ALWAYS:
                 self.archive_path = archive_path
 
-            self.text = self.extract_text(sidecar_file, archive_path)
+            # Default to text extracted via traditional OCR
+            extracted_text = self.extract_text(sidecar_file, archive_path)
+
+            # Optionally enhance or replace text using a VLM model if enabled
+            # Only run VLM analysis for image files.
+            if self.settings.vlm_analysis_enabled and self.is_image(mime_type):
+                try:
+                    vlm_model = AIModel.objects.filter(
+                        model_type="vlm", is_default=True
+                    ).first()
+                    if vlm_model:
+                        import httpx
+                        import json
+
+                        url = f"{vlm_model.api_domain.rstrip('/')}/chat/completions"
+
+                        # Encode image as base64 and pass it as a parameter in messages
+                        with open(document_path, "rb") as image_file:
+                            image_bytes = image_file.read()
+                        image_b64 = base64.b64encode(image_bytes).decode("ascii")
+                        image_data_url = f"data:{mime_type};base64,{image_b64}"
+
+                        # Build a prompt instructing the VLM to extract text from the image
+                        messages = [
+                            {
+                                "role": "system",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "你是一个图像理解模型，任务是从提供的文档图片中尽可能完整、准确地提取所有可见文字。",
+                                    },
+                                ],
+                            },
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "请从这份文档图片中提取所有的文字内容（包括段落、标题等），以纯文本形式返回。",
+                                    },
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": image_data_url,
+                                        },
+                                    },
+                                ],
+                            },
+                        ]
+
+                        payload = {
+                            "model": vlm_model.base_model,
+                            "messages": messages,
+                            "stream": False,
+                        }
+
+                        params = vlm_model.params
+                        if params:
+                            if isinstance(params, dict):
+                                payload.update(params)
+                            elif isinstance(params, list):
+                                parsed_params = {}
+                                for entry in params:
+                                    if not isinstance(entry, dict):
+                                        continue
+                                    key = entry.get("key")
+                                    if not key:
+                                        continue
+                                    value = entry.get("val")
+                                    entry_type = entry.get("type")
+                                    if entry_type == "number":
+                                        try:
+                                            value = float(value)
+                                        except (TypeError, ValueError):
+                                            continue
+                                    elif entry_type == "json" and isinstance(
+                                        value, str
+                                    ):
+                                        try:
+                                            value = json.loads(value)
+                                        except json.JSONDecodeError:
+                                            continue
+                                    parsed_params[key] = value
+                                payload.update(parsed_params)
+
+                        headers = {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "Authorization": f"Bearer {vlm_model.api_key}",
+                        }
+
+                        client = httpx.Client(timeout=None)
+                        try:
+                            response = client.post(
+                                url,
+                                headers=headers,
+                                json=payload,
+                            )
+                            response.raise_for_status()
+                            data = response.json()
+                            # OpenAI-compatible response: choices[0].message.content
+                            content = (
+                                data.get("choices", [{}])[0]
+                                .get("message", {})
+                                .get("content")
+                            )
+                            if content:
+                                self.text = post_process_text(content)
+                            else:
+                                self.text = extracted_text
+                        except Exception as e:  # pragma: no cover
+                            self.log.warning(
+                                f"VLM analysis failed, falling back to OCR text: {e}",
+                            )
+                            self.text = extracted_text
+                        finally:
+                            client.close()
+                    else:
+                        # No VLM model configured, fall back to OCR result
+                        self.text = extracted_text
+                except Exception as e:  # pragma: no cover
+                    self.log.warning(
+                        f"Unexpected error during VLM analysis, falling back to OCR text: {e}",
+                    )
+                    self.text = extracted_text
+            else:
+                self.text = extracted_text
 
             if not self.text:
                 raise NoTextFoundException("No text was found in the original document")

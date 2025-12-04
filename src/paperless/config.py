@@ -55,6 +55,7 @@ class OcrConfig(OutputTypeConfig):
     max_image_pixel: float | None = dataclasses.field(init=False)
     color_conversion_strategy: str = dataclasses.field(init=False)
     user_args: dict[str, str] | None = dataclasses.field(init=False)
+    vlm_analysis_enabled: bool = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -86,6 +87,12 @@ class OcrConfig(OutputTypeConfig):
         self.color_conversion_strategy = (
             app_config.color_conversion_strategy
             or settings.OCR_COLOR_CONVERSION_STRATEGY
+        )
+
+        self.vlm_analysis_enabled = bool(
+            app_config.vlm_analysis_enabled
+            if app_config.vlm_analysis_enabled is not None
+            else getattr(settings, "OCR_VLM_ANALYSIS_ENABLED", False)
         )
 
         user_args = None

@@ -154,6 +154,13 @@ class ApplicationConfiguration(AbstractSingletonModel):
         validators=[MinValueValidator(0.0)],
     )
 
+    # Enable VLM-based image understanding to extract text
+    vlm_analysis_enabled = models.BooleanField(
+        verbose_name=_("Enable VLM image understanding"),
+        null=True,
+        blank=True,
+    )
+
     color_conversion_strategy = models.CharField(
         verbose_name=_("Sets the Ghostscript color conversion strategy"),
         blank=True,
