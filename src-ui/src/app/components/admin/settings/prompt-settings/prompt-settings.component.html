@@ -1,0 +1,56 @@
+<form [formGroup]="form">
+  <div class="row">
+    <div class="col-xl-6 pe-xl-5">
+      <h5 i18n>Document read prompt (DOC_READ)</h5>
+      <div class="mb-3">
+        <textarea
+          class="form-control"
+          rows="10"
+          [disabled]="loading || saving"
+          placeholder="Enter system prompt for document reading..."
+          i18n-placeholder
+          formControlName="docRead"
+        ></textarea>
+        <small class="form-text text-muted" i18n>
+          This text will be used as the system prompt when asking questions about documents.
+        </small>
+      </div>
+    </div>
+
+    <div class="col-xl-6 ps-xl-5">
+      <h5 i18n>Image analysis prompt (VLM_ANALYSIS_IMAGE)</h5>
+      <div class="mb-3">
+        <textarea
+          class="form-control"
+          rows="10"
+          [disabled]="loading || saving"
+          placeholder="Enter system prompt for image text extraction..."
+          i18n-placeholder
+          formControlName="vlmAnalysisImage"
+        ></textarea>
+        <small class="form-text text-muted" i18n>
+          This text will be used as the system prompt when extracting text from images using a vision-language model.
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="onSave()"
+      [disabled]="loading || saving"
+    >
+      <span
+        class="spinner-border spinner-border-sm me-2"
+        role="status"
+        aria-hidden="true"
+        *ngIf="saving"
+      ></span>
+      <ng-container i18n>Save prompts</ng-container>
+    </button>
+  </div>
+</form>
+
+

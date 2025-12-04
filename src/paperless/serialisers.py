@@ -13,8 +13,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 
-from paperless.models import AIModel
-from paperless.models import ApplicationConfiguration
+from paperless.models import AIModel, ApplicationConfiguration, Prompt
 from paperless.validators import reject_dangerous_svg
 from paperless_mail.serialisers import ObfuscatedPasswordField
 
@@ -237,5 +236,22 @@ class AIModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AIModel
+        fields = "__all__"
+
+    def update(self, instance, validated_data):
+        # If api_key is present but only contains obfuscated characters (e.g. "*****"),
+        # do not overwrite the existing real key in the database.
+        if (
+            "api_key" in validated_data
+            and isinstance(validated_data.get("api_key"), str)
+            and len(validated_data.get("api_key").replace("*", "")) == 0
+        ):
+            validated_data.pop("api_key")
+        return super().update(instance, validated_data)
+
+
+class PromptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Prompt
         fields = "__all__"
 

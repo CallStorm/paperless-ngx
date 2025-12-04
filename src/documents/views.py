@@ -195,7 +195,7 @@ from paperless import version
 from paperless.celery import app as celery_app
 from paperless.config import GeneralConfig
 from paperless.db import GnuPG
-from paperless.models import AIModel
+from paperless.models import AIModel, Prompt
 from paperless.models import ApplicationConfiguration
 from paperless.serialisers import GroupSerializer
 from paperless.serialisers import UserSerializer
@@ -1104,9 +1104,6 @@ class DocumentViewSet(
         ):
             return HttpResponseForbidden("Insufficient permissions")
 
-        serializer = DocumentDocReadSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
         ai_model = AIModel.objects.filter(is_default=True).first()
         if ai_model is None:
             return Response(
@@ -1114,9 +1111,24 @@ class DocumentViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        serializer = DocumentDocReadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        messages = serializer.validated_data["messages"]
+
+        # Load DOC_READ system prompt from configuration and prepend it
+        prompt = Prompt.objects.filter(type="DOC_READ").first()
+        if prompt and prompt.content:
+            messages = [
+                {
+                    "role": "system",
+                    "content": prompt.content,
+                },
+                *messages,
+            ]
+
         payload = {
             "model": ai_model.base_model,
-            "messages": serializer.validated_data["messages"],
+            "messages": messages,
             "stream": True,
         }
         payload.update(self._prepare_model_params(ai_model))

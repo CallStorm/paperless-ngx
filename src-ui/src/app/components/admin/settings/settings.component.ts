@@ -59,6 +59,7 @@ import { SystemStatusService } from 'src/app/services/system-status.service'
 import { Toast, ToastService } from 'src/app/services/toast.service'
 import { locationReload } from 'src/app/utils/navigation'
 import { AiModelSettingsComponent } from './ai-model-settings/ai-model-settings.component'
+import { PromptSettingsComponent } from './prompt-settings/prompt-settings.component'
 import { CheckComponent } from '../../common/input/check/check.component'
 import { ColorComponent } from '../../common/input/color/color.component'
 import { PermissionsGroupComponent } from '../../common/input/permissions/permissions-group/permissions-group.component'
@@ -75,6 +76,7 @@ enum SettingsNavIDs {
   Notifications = 3,
   AIModels = 4,
   SavedViews = 5,
+  Prompts = 6,
 }
 
 const systemLanguage = { code: '', name: $localize`Use system language` }
@@ -103,6 +105,7 @@ const systemDateFormat = {
     NgbPopoverModule,
     NgxBootstrapIconsModule,
     AiModelSettingsComponent,
+    PromptSettingsComponent,
   ],
 })
 export class SettingsComponent

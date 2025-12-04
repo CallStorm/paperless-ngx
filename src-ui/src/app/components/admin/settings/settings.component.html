@@ -361,6 +361,12 @@
           <pngx-ai-model-settings></pngx-ai-model-settings>
         </ng-template>
       </li>
+      <li [ngbNavItem]="SettingsNavIDs.Prompts">
+        <a ngbNavLink i18n>AI prompts</a>
+        <ng-template ngbNavContent>
+          <pngx-prompt-settings></pngx-prompt-settings>
+        </ng-template>
+      </li>
     }
   </ul>
 

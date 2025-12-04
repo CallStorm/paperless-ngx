@@ -44,7 +44,7 @@ from documents.views import WorkflowTriggerViewSet
 from documents.views import WorkflowViewSet
 from documents.views import serve_logo
 from paperless.consumers import StatusConsumer
-from paperless.views import AIModelViewSet
+from paperless.views import AIModelViewSet, PromptViewSet
 from paperless.views import ApplicationConfigurationViewSet
 from paperless.views import DisconnectSocialAccountView
 from paperless.views import FaviconView
@@ -81,6 +81,7 @@ api_router.register(r"custom_fields", CustomFieldViewSet)
 api_router.register(r"config", ApplicationConfigurationViewSet)
 api_router.register(r"processed_mail", ProcessedMailViewSet)
 api_router.register(r"ai_models", AIModelViewSet, basename="ai_models")
+api_router.register(r"prompts", PromptViewSet, basename="prompts")
 
 
 urlpatterns = [

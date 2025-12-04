@@ -820,9 +820,7 @@ export class DocumentAiDetailComponent
         content: message.content,
       })
     )
-    const messages: DocumentChatMessagePayload[] = [
-      { role: 'system', content: this.docReadSystemPrompt },
-    ]
+    const messages: DocumentChatMessagePayload[] = []
     const context = this.getDocumentContextSnippet()
     if (context) {
       messages.push({

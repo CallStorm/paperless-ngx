@@ -14,7 +14,7 @@ from documents.parsers import make_thumbnail_from_pdf
 from documents.utils import maybe_override_pixel_limit
 from documents.utils import run_subprocess
 from paperless.config import OcrConfig
-from paperless.models import AIModel
+from paperless.models import AIModel, Prompt
 from paperless.models import ArchiveFileChoices
 from paperless.models import CleanChoices
 from paperless.models import ModeChoices
@@ -410,6 +410,16 @@ class RasterisedDocumentParser(DocumentParser):
                         image_b64 = base64.b64encode(image_bytes).decode("ascii")
                         image_data_url = f"data:{mime_type};base64,{image_b64}"
 
+                        # Load VLM analysis prompt from configuration
+                        prompt = Prompt.objects.filter(
+                            type="VLM_ANALYSIS_IMAGE"
+                        ).first()
+                        prompt_text = (
+                            prompt.content
+                            if prompt and prompt.content
+                            else "You are an image understanding model. Extract all visible text from the provided document image and return it as plain text."
+                        )
+
                         # Build a prompt instructing the VLM to extract text from the image
                         messages = [
                             {
@@ -417,17 +427,13 @@ class RasterisedDocumentParser(DocumentParser):
                                 "content": [
                                     {
                                         "type": "text",
-                                        "text": "你是一个图像理解模型，任务是从提供的文档图片中尽可能完整、准确地提取所有可见文字。",
+                                        "text": prompt_text,
                                     },
                                 ],
                             },
                             {
                                 "role": "user",
                                 "content": [
-                                    {
-                                        "type": "text",
-                                        "text": "请从这份文档图片中提取所有的文字内容（包括段落、标题等），以纯文本形式返回。",
-                                    },
                                     {
                                         "type": "image_url",
                                         "image_url": {

@@ -364,3 +364,32 @@ class AIModel(models.Model):
     def __str__(self) -> str:  # pragma: no cover
         return self.name
 
+
+class Prompt(models.Model):
+    type = models.CharField(
+        verbose_name=_("prompt type"),
+        max_length=64,
+        unique=True,
+    )
+
+    content = models.TextField(
+        verbose_name=_("prompt content"),
+    )
+
+    created_at = models.DateTimeField(
+        verbose_name=_("created at"),
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        verbose_name=_("updated at"),
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = _("Prompt")
+        verbose_name_plural = _("Prompts")
+
+    def __str__(self) -> str:  # pragma: no cover
+        return f"{self.type}"
+
