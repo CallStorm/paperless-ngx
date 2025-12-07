@@ -78,8 +78,10 @@ services:
     # want to allow external content like tracking pixels or even javascript.
     command:
       - "gotenberg"
+      - "--api-timeout=400s"
       - "--chromium-disable-javascript=true"
       - "--chromium-allow-list=file:///tmp/.*"
+
   tika:
     image: docker.io/apache/tika:latest
     restart: unless-stopped
