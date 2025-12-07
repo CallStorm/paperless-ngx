@@ -2,7 +2,8 @@
 
 **口号：融合 AI 的下一代 Paperless-ngx，让您的文档真正“会说话”和“易管理”。**
 
-本项目基于优秀的开源文档管理系统 **`paperless-ngx`** 进行二次开发，深度集成 **大语言模型（LLM）** 和 **视觉模型（VLM）** 能力，旨在构建一个功能更强大、交互更智能、管理更高效的文档知识库。
+本项目基于卓越的开源文档管理系统 **`paperless-ngx`** 深度二次开发，创新性地融合了 **大语言模型（LLM）** 与 **视觉模型（VLM）** 等先进 AI 能力。目标是打造一个功能更强大、交互更智能、管理更高效的**智能文档知识库**，让您的文档真正实现**深度理解与高效利用**。
+
 
 -----
 ## ✨ 核心价值与 AI 驱动的增强
@@ -119,23 +120,58 @@
 
  
 
-## 运维与架构要点
+## 架构要点
 
-- 组件与端口：
-  - `webserver`（应用服务，`8000` → 外部 `8008`）
-  - `db`（MariaDB，默认凭据见编排文件）
-  - `broker`（Redis，`6379`）
-  - `tika`（Apache Tika，用于 Office 文档解析）
-  - `gotenberg`（Office/PDF 转换与渲染）
-- 数据卷与目录：
-  - `data`、`media`（应用数据与媒体存储）
-  - `./consume`（主机侧待导入目录）
-  - `./export`（主机侧导出目录）
-- 常用操作：
-  - 查看日志：`docker compose -f docker-compose.mariadb-tika.yml logs -f webserver`
-  - 更新镜像：`docker compose -f docker-compose.mariadb-tika.yml pull && docker compose -f docker-compose.mariadb-tika.yml up -d`
+系统架构依赖于多个组件协同工作，以实现文档的上传、处理、索引和存储。
 
+### 🏛️ 技术栈概览
 
+| 组件 | 技术 | 描述 |
+| :--- | :--- | :--- |
+| **后端** | **Python, Django, Django REST Framework** | 核心业务逻辑、权限控制、工作流引擎、API 接口。 |
+| **前端** | **AngularJS** | 现代化的 Web 界面，负责用户交互和数据展示。 |
+| **缓存/队列** | **Redis** | 任务队列（Celery）、会话管理和临时数据存储。 |
+
+---
+
+### 核心处理组件
+
+| 组件 | 功能简介 | 输入 | 输出 |
+|------|----------|------|------|
+| **OCRmyPDF** | 为扫描版 PDF 或图片文件添加可搜索文字层，提升可检索性 | 扫描 PDF、图像文件（JPEG、PNG 等） | 符合 PDF/A-2b 标准的可搜索 PDF |
+| **Apache Tika** | 从 1000+ 种文件格式中提取文本与元数据（作者、日期、标题等） | PDF、Office 文档、图像、音频、视频、邮件等 | 结构化文本与元数据 |
+| **Gotenberg** | 将 HTML、Markdown、Office 文档等格式转换为 PDF | HTML、Office 文档、图片等 | PDF（也可输出 PNG 截图） |
+
+### 件处理器与解析流程
+
+系统内置多个解析器，根据 MIME 类型自动选择最优处理管道：
+
+| 解析器 | 支持类型 | 处理逻辑 |
+|--------|----------|----------|
+| `paperless_text` | 纯文本、CSV | 读取文本 → 生成 WEBP 缩略图 |
+| `paperless_tika` | Word、Excel、PowerPoint、RTF、ODF 等 | 发送至 Tika 提取文本/元数据 → 使用 Gotenberg 转换为 PDF → 生成缩略图 |
+| `paperless_tesseract` | PDF、JPEG、PNG、TIFF、HEIC 等图片格式 | 对图片进行 DPI 估算、去 Alpha 通道，调用 OCRmyPDF 进行 OCR 并生成可搜索 PDF |
+| `paperless_mail` | .eml 邮件文件 | 解析邮件头与正文（HTML/文本）→ 使用 Tika 提取内容 → Gotenberg 转 PDF → 生成缩略图 |
+
+### 文件消费流程概览
+
+1. **客户端上传** → POST `/api/documents/post_document/`
+2. **格式校验与预处理**  
+   - 使用 `libmagic` 检测 MIME 类型  
+   - 若为不支持格式则返回 400  
+   - 若为可修复 PDF 则按 `application/pdf` 继续处理
+3. **写入临时文件**并构造 `ConsumableDocument`
+4. **异步任务入队** → 返回 `task_id`
+5. **插件流水线执行**：
+   - 预检（重复性、ASN、目录校验）
+   - 条码处理（若启用则拆分文件或提取 ASN/标签）
+   - 工作流触发器应用
+   - **主处理阶段**：
+     - 按 MIME 选择解析器
+     - 执行对应解析流程（见上表）
+     - 生成缩略图、解析日期与页数
+     - 持久化至数据库并写入归档文件
+     - 清理临时文件，推送成功状态
 
 ## 许可证与致谢
 
